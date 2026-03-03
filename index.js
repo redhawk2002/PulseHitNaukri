@@ -140,5 +140,14 @@ if (args.includes('--manual')) {
         logger.info(`Dashboard server running on http://localhost:${port}`);
         logger.info('Running background scheduler...');
         startScheduler();
+
+        // Keep Render free-tier service awake by self-pinging every 14 minutes
+        const SELF_URL = process.env.RENDER_EXTERNAL_URL;
+        if (SELF_URL) {
+            logger.info(`Self-ping enabled for ${SELF_URL}`);
+            setInterval(() => {
+                require('https').get(SELF_URL, () => {}).on('error', () => {});
+            }, 14 * 60 * 1000);
+        }
     });
 }
