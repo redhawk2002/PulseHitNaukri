@@ -7,7 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node index.js",
     "start:manual": "node index.js --manual",
-    "build": "npx playwright install chromium"
+    "build": "PLAYWRIGHT_BROWSERS_PATH=0 npx playwright install chromium"
   },
   "keywords": [],
   "author": "",

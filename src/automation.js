@@ -10,14 +10,8 @@ async function runProfileUpdate() {
   logger.info('Starting Naukri Profile Update automation...');
   let browser;
   try {
-    // Resolve the correct executable path from the installed playwright browsers
-    const pw = require('playwright');
-    const execPath = pw.chromium.executablePath();
-    logger.info(`Using Chromium executable: ${execPath}`);
-
     browser = await chromium.launch({
       headless: true,
-      executablePath: execPath,
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
