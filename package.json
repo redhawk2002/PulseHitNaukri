@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node index.js",
-    "start:manual": "node index.js --manual"
+    "start:manual": "node index.js --manual",
+    "build": "npx playwright install --with-deps chromium"
   },
   "keywords": [],
   "author": "",
