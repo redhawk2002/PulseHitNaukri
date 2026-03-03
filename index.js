@@ -1,11 +1,12 @@
 const express = require('express');
 const basicAuth = require('express-basic-auth');
+const helmet = require('helmet');
 const path = require('path');
 const { startScheduler, executeWithRetry } = require('./src/scheduler');
 const config = require('./src/config');
 const logger = require('./src/logger');
 const fs = require('fs');
-const dotenv = require('dotenv');
+const cron = require('node-cron');
 
 const args = process.argv.slice(2);
 
@@ -22,6 +23,7 @@ if (args.includes('--manual')) {
     const app = express();
     const port = process.env.PORT || 8080;
 
+    app.use(helmet({ contentSecurityPolicy: false })); // Security headers (CSP disabled for inline styles/scripts)
     app.use(express.json());
     app.use(express.urlencoded({ extended: true }));
 
@@ -77,6 +79,10 @@ if (args.includes('--manual')) {
        if(!newSchedule) {
            return res.status(400).json({success: false, message: 'Missing schedule string.' });
        }
+       // Validate CRON expression before accepting
+       if (!cron.validate(newSchedule)) {
+           return res.status(400).json({success: false, message: 'Invalid CRON expression.' });
+       }
        logger.info(`Dashboard requested schedule update to ${newSchedule}`);
        
        config.cronSchedule = newSchedule;
@@ -108,15 +114,23 @@ if (args.includes('--manual')) {
     // Get logs logic
     app.get('/api/logs', (req, res) => {
         try {
-            const logPath = path.join(__dirname, 'logs', 'automation.log');
-            if (fs.existsSync(logPath)) {
-                // Return last 50 lines roughly by reading file (simplified native logic)
-                const logs = fs.readFileSync(logPath, 'utf8');
-                const lines = logs.split('\n').filter(Boolean).slice(-50);
-                res.json({ success: true, logs: lines });
-            } else {
-                res.json({ success: true, logs: [] });
+            const logsDir = path.join(__dirname, 'logs');
+            if (!fs.existsSync(logsDir)) {
+                return res.json({ success: true, logs: [] });
             }
+            // Find the latest log file (rotating files are named automation-YYYY-MM-DD.log)
+            const logFiles = fs.readdirSync(logsDir)
+                .filter(f => f.startsWith('automation') && f.endsWith('.log'))
+                .sort()
+                .reverse();
+            
+            if (logFiles.length === 0) {
+                return res.json({ success: true, logs: [] });
+            }
+            const latestLog = path.join(logsDir, logFiles[0]);
+            const logs = fs.readFileSync(latestLog, 'utf8');
+            const lines = logs.split('\n').filter(Boolean).slice(-50);
+            res.json({ success: true, logs: lines });
         } catch(e) {
             res.status(500).json({ success: false, message: 'Failed to read logs.' });
         }

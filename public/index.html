@@ -3,234 +3,366 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ProfilePulse Automation Dashboard</title>
+    <title>ProfilePulse — Naukri Automation</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #4A90E2;
-            --success: #2ecc71;
-            --danger: #e74c3c;
-            --dark: #2c3e50;
-            --light: #f5f6fa;
-            --border: #dcdde1;
+            --bg: #0f1117;
+            --surface: #1a1d28;
+            --surface-hover: #22263a;
+            --border: #2a2e3e;
+            --text: #e4e6ed;
+            --text-muted: #8b8fa3;
+            --primary: #6c5ce7;
+            --primary-glow: rgba(108, 92, 231, 0.15);
+            --success: #00b894;
+            --success-glow: rgba(0, 184, 148, 0.15);
+            --danger: #ff6b6b;
+            --danger-glow: rgba(255, 107, 107, 0.15);
+            --warning: #fdcb6e;
+            --accent: #74b9ff;
         }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--light);
-            color: var(--dark);
-            margin: 0;
-            padding: 20px;
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 24px;
         }
-        .container {
-            max-width: 800px;
+
+        .dashboard {
+            max-width: 860px;
             margin: 0 auto;
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
-        h1 {
-            color: var(--primary);
-            border-bottom: 2px solid var(--border);
-            padding-bottom: 10px;
-            margin-top: 0;
+
+        /* Header */
+        .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            margin-bottom: 28px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border);
         }
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .header-sub { color: var(--text-muted); font-size: 0.85rem; margin-top: 4px; }
+        .badge {
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        .badge.running { background: var(--success-glow); color: var(--success); border: 1px solid var(--success); }
+        .badge.stopped { background: var(--danger-glow); color: var(--danger); border: 1px solid var(--danger); }
+
+        /* Cards */
         .card {
-            background: #fff;
+            background: var(--surface);
             border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 20px;
+            border-radius: 12px;
+            padding: 24px;
             margin-bottom: 20px;
+            transition: border-color 0.2s;
         }
-        .status-badge {
-            display: inline-block;
-            padding: 5px 12px;
-            border-radius: 15px;
-            background-color: var(--success);
-            color: white;
-            font-size: 0.9em;
-            font-weight: bold;
+        .card:hover { border-color: #3a3e50; }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
         }
-        .status-badge.stopped {
-            background-color: var(--danger);
+        .card-title {
+            font-size: 1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
+        .card-title .icon { font-size: 1.2rem; }
+        .card-desc { color: var(--text-muted); font-size: 0.82rem; margin-bottom: 16px; line-height: 1.5; }
+
+        /* Info Row */
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        .info-row:last-child { border-bottom: none; }
+        .info-label { color: var(--text-muted); font-size: 0.85rem; }
+        .info-value { font-weight: 600; font-size: 0.9rem; }
+
+        /* Buttons */
         button {
             border: none;
             padding: 10px 20px;
-            border-radius: 5px;
+            border-radius: 8px;
             cursor: pointer;
-            font-size: 1em;
-            transition: all 0.3s;
-            font-weight: 500;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
         }
-        .btn-primary { background-color: var(--primary); color: white; }
-        .btn-success { background-color: var(--success); color: white; }
-        .btn-danger { background-color: var(--danger); color: white; }
-        button:hover { opacity: 0.9; transform: translateY(-1px); }
-        button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-        
-        .grid-options {
+        button:hover { transform: translateY(-1px); filter: brightness(1.1); }
+        button:active { transform: translateY(0); }
+        button:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-success { background: var(--success); color: white; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-outline {
+            background: transparent; color: var(--text-muted);
+            border: 1px solid var(--border);
+        }
+        .btn-outline:hover { color: var(--text); border-color: var(--text-muted); }
+        .btn-sm { padding: 6px 14px; font-size: 0.78rem; }
+
+        /* Schedule Grid */
+        .schedule-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-top: 15px;
+            gap: 16px;
         }
-        .option-box {
+        .schedule-option {
+            background: var(--bg);
             border: 1px solid var(--border);
-            padding: 15px;
+            padding: 16px;
             border-radius: 8px;
-            background: #fafafa;
+        }
+        .schedule-option label {
+            display: block;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+        .schedule-option .hint {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 6px;
+            opacity: 0.7;
         }
         select, input[type="time"] {
             width: 100%;
-            padding: 8px;
-            margin-top: 10px;
-            border-radius: 4px;
+            padding: 10px 12px;
+            background: var(--surface);
             border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.85rem;
         }
-        .logs {
-            background: #1e1e1e;
-            color: #00ff00;
-            padding: 15px;
-            border-radius: 5px;
-            height: 250px;
+        select:focus, input[type="time"]:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-glow);
+        }
+
+        /* Actions */
+        .action-row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        /* Logs */
+        .log-container {
+            background: #0a0c10;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+            height: 280px;
             overflow-y: auto;
-            font-family: 'Consolas', monospace;
-            font-size: 0.85em;
-            white-space: pre-wrap;
-            margin-top: 10px;
+            font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+            font-size: 0.78rem;
+            line-height: 1.7;
         }
+        .log-line { white-space: pre-wrap; word-break: break-all; }
+        .log-info { color: #74b9ff; }
+        .log-warn { color: var(--warning); }
+        .log-error { color: var(--danger); }
+
+        /* Message toast */
+        .toast {
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 0.82rem;
+            font-weight: 500;
+            margin-top: 12px;
+            display: none;
+            background: var(--success-glow);
+            color: var(--success);
+            border: 1px solid var(--success);
+        }
+
+        /* Spinner */
         .spinner {
-            display: none; border: 3px solid rgba(255,255,255,0.3);
-            border-top: 3px solid white;
-            border-radius: 50%; width: 16px; height: 16px;
-            animation: spin 1s linear infinite; vertical-align: middle;
-            margin-left: 8px;
+            display: none;
+            width: 14px; height: 14px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top: 2px solid white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
         }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .schedule-grid { grid-template-columns: 1fr; }
+            .header { flex-direction: column; align-items: flex-start; gap: 12px; }
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>
-            ProfilePulse Dashboard
-            <span id="headerStatus" class="status-badge">Running</span>
-        </h1>
-        
+    <div class="dashboard">
+        <!-- Header -->
+        <div class="header">
+            <div>
+                <h1>⚡ ProfilePulse</h1>
+                <p class="header-sub">Automatically keeps your Naukri profile active and visible to recruiters</p>
+            </div>
+            <span id="headerBadge" class="badge running">● RUNNING</span>
+        </div>
+
+        <!-- Status Overview -->
         <div class="card">
-            <div style="display:flex; justify-content: space-between; align-items: center;">
-                <div>
-                    <h3>Scheduler Control</h3>
-                    <p>Current Activity: <strong id="currentActivity">Every 12 hours</strong></p>
-                </div>
-                <button id="toggleBtn" class="btn-danger" onclick="toggleScheduler()">Stop Job</button>
+            <div class="card-title"><span class="icon">📊</span> Status Overview</div>
+            <p class="card-desc">Real-time status of your automation service.</p>
+            <div class="info-row">
+                <span class="info-label">Scheduler</span>
+                <span id="schedulerStatus" class="info-value" style="color: var(--success);">Active</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Update Frequency</span>
+                <span id="currentSchedule" class="info-value">—</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Browser Mode</span>
+                <span id="browserMode" class="info-value">—</span>
             </div>
         </div>
 
+        <!-- Schedule Settings -->
         <div class="card">
-            <h3>Easy Schedule Settings</h3>
-            <div class="grid-options">
-                <div class="option-box">
-                    <label>Interval Update</label>
+            <div class="card-header">
+                <div class="card-title"><span class="icon">🕐</span> Update Schedule</div>
+                <button id="toggleBtn" class="btn-danger btn-sm" onclick="toggleScheduler()">⏸ Pause</button>
+            </div>
+            <p class="card-desc">Choose how often the bot updates your profile. This triggers a remove-and-re-add of the "Python" skill to refresh your profile's "last updated" timestamp.</p>
+
+            <div class="schedule-grid">
+                <div class="schedule-option">
+                    <label>🔄 Repeat Every</label>
                     <select id="intervalSelect" onchange="applyInterval()">
-                        <option value="">-- Choose Interval --</option>
+                        <option value="">— Select interval —</option>
                         <option value="0 */4 * * *">Every 4 hours</option>
                         <option value="0 */6 * * *">Every 6 hours</option>
-                        <option value="0 */12 * * *">Every 12 hours (Standard)</option>
-                        <option value="0 0 * * *">Every 24 hours</option>
+                        <option value="0 */12 * * *">Every 12 hours (Recommended)</option>
+                        <option value="0 0 * * *">Once a day (midnight)</option>
                     </select>
+                    <p class="hint">Best for continuous visibility throughout the day</p>
                 </div>
-                <div class="option-box">
-                    <label>Specific Daily Time</label>
-                    <div style="display:flex; gap:5px;">
-                        <input type="time" id="timeInput">
-                        <button class="btn-primary" style="margin-top:10px;" onclick="applyTime()">Set</button>
-                    </div>
+                <div class="schedule-option">
+                    <label>🎯 At Specific Time</label>
+                    <input type="time" id="timeInput">
+                    <button class="btn-primary btn-sm" style="margin-top: 10px; width: 100%;" onclick="applyTime()">Set This Time</button>
+                    <p class="hint">Runs once daily at the exact time you choose</p>
                 </div>
             </div>
-            <p id="scheduleMsg" style="color:var(--success); font-weight:500; margin-top:10px; display:none;"></p>
+            <div id="scheduleToast" class="toast"></div>
         </div>
 
+        <!-- Quick Actions -->
         <div class="card">
-            <h3>Quick Actions</h3>
-            <div style="display:flex; gap:10px;">
+            <div class="card-title"><span class="icon">🚀</span> Quick Actions</div>
+            <p class="card-desc">Manually trigger an update or check your live Naukri profile.</p>
+            <div class="action-row">
                 <button class="btn-success" onclick="runManual()">
-                    Force Update Now <div class="spinner" id="runSpinner"></div>
+                    ▶ Run Update Now <div class="spinner" id="runSpinner"></div>
                 </button>
-                <button class="btn-primary" onclick="window.open('https://www.naukri.com/mnjuser/profile', '_blank')">View Naukri Profile</button>
+                <button class="btn-outline" onclick="window.open('https://www.naukri.com/mnjuser/profile', '_blank')">
+                    🔗 Open Naukri Profile
+                </button>
             </div>
-            <p id="manualMsg" style="color:var(--success); font-weight:500; margin-top:10px; display:none;"></p>
+            <div id="manualToast" class="toast"></div>
         </div>
 
+        <!-- Activity Logs -->
         <div class="card">
-            <div style="display:flex; justify-content: space-between; align-items: center;">
-                <h3>Activity Logs</h3>
-                <button class="btn-primary" style="padding: 5px 12px; font-size: 0.8em;" onclick="fetchLogs()">Refresh</button>
+            <div class="card-header">
+                <div class="card-title"><span class="icon">📋</span> Activity Logs</div>
+                <button class="btn-outline btn-sm" onclick="fetchLogs()">↻ Refresh</button>
             </div>
-            <div class="logs" id="logContent">Initializing logs...</div>
+            <p class="card-desc">Live output from the automation engine. Errors appear in red, warnings in yellow.</p>
+            <div class="log-container" id="logContent">Waiting for logs...</div>
         </div>
     </div>
 
     <script>
         let isRunning = true;
 
+        // === Human-readable CRON translation ===
         function cronToHuman(cron) {
             if (!cron) return 'Not Set';
             const parts = cron.split(' ');
             if (parts.length !== 5) return cron;
-
             const [m, h, dom, mon, dow] = parts;
 
-            // Interval pattern: 0 */N * * *
             if (m === '0' && h.startsWith('*/') && dom === '*' && mon === '*' && dow === '*') {
-                const hours = h.replace('*/', '');
-                return `Every ${hours} hours`;
+                return `Every ${h.replace('*/', '')} hours`;
             }
-
-            // Daily at specific time: M H * * *
+            if (m === '0' && h.includes(',') && dom === '*' && mon === '*' && dow === '*') {
+                const times = h.split(',').map(hr => {
+                    const hour = parseInt(hr);
+                    return `${hour % 12 || 12} ${hour >= 12 ? 'PM' : 'AM'}`;
+                });
+                return `Daily at ${times.join(' & ')}`;
+            }
             if (dom === '*' && mon === '*' && dow === '*') {
                 const hour = parseInt(h);
                 const minute = m.padStart(2, '0');
-                const period = hour >= 12 ? 'PM' : 'AM';
-                const displayHour = hour % 12 || 12;
-                return `Daily at ${displayHour}:${minute} ${period}`;
+                return `Daily at ${hour % 12 || 12}:${minute} ${hour >= 12 ? 'PM' : 'AM'}`;
             }
-
-            // Standard multiple times: 0 9,21 * * *
-            if (m === '0' && h.includes(',') && dom === '*' && mon === '*' && dow === '*') {
-                const hours = h.split(',').map(hourStr => {
-                    const hour = parseInt(hourStr);
-                    const period = hour >= 12 ? 'PM' : 'AM';
-                    const displayHour = hour % 12 || 12;
-                    return `${displayHour} ${period}`;
-                });
-                return hours.join(' and ') + ' daily';
-            }
-
-            return cron; // Fallback
+            return cron;
         }
 
+        // === API Calls ===
         async function fetchStatus() {
             try {
                 const res = await fetch('/api/status');
                 const data = await res.json();
                 isRunning = data.status === 'running';
-                
-                const badge = document.getElementById('headerStatus');
+
+                const badge = document.getElementById('headerBadge');
+                badge.textContent = isRunning ? '● RUNNING' : '● STOPPED';
+                badge.className = isRunning ? 'badge running' : 'badge stopped';
+
+                const statusEl = document.getElementById('schedulerStatus');
+                statusEl.textContent = isRunning ? 'Active' : 'Paused';
+                statusEl.style.color = isRunning ? 'var(--success)' : 'var(--danger)';
+
+                document.getElementById('currentSchedule').textContent = cronToHuman(data.cronSchedule);
+                document.getElementById('browserMode').textContent = data.headless ? 'Headless (Hidden)' : 'Headed (Visible)';
+
                 const toggleBtn = document.getElementById('toggleBtn');
-                const activityVal = document.getElementById('currentActivity');
-                
-                badge.innerText = isRunning ? 'Running' : 'Stopped';
-                badge.className = isRunning ? 'status-badge' : 'status-badge stopped';
-                
-                toggleBtn.innerText = isRunning ? 'Stop Job' : 'Start Job';
-                toggleBtn.className = isRunning ? 'btn-danger' : 'btn-success';
-                
-                activityVal.innerText = isRunning ? cronToHuman(data.cronSchedule) : 'Inactive';
-            } catch(e) {
-                console.error("Status check failed");
+                toggleBtn.innerHTML = isRunning ? '⏸ Pause' : '▶ Resume';
+                toggleBtn.className = isRunning ? 'btn-danger btn-sm' : 'btn-success btn-sm';
+            } catch (e) {
+                console.error('Status fetch failed:', e);
             }
         }
 
@@ -238,10 +370,10 @@
             try {
                 const res = await fetch('/api/toggle-scheduler', { method: 'POST' });
                 const data = await res.json();
-                showMessage('scheduleMsg', data.message);
+                showToast('scheduleToast', data.message);
                 fetchStatus();
-            } catch(e) {
-                alert('Toggle failed');
+            } catch (e) {
+                showToast('scheduleToast', 'Toggle failed. Check connection.');
             }
         }
 
@@ -255,22 +387,21 @@
             const time = document.getElementById('timeInput').value;
             if (!time) return;
             const [hour, minute] = time.split(':');
-            const cron = `${minute} ${hour} * * *`;
-            saveSchedule(cron);
+            saveSchedule(`${minute} ${hour} * * *`);
         }
 
         async function saveSchedule(cron) {
             try {
                 const res = await fetch('/api/schedule', {
                     method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ schedule: cron })
                 });
                 const data = await res.json();
-                showMessage('scheduleMsg', data.message);
+                showToast('scheduleToast', `✅ Schedule updated to: ${cronToHuman(cron)}`);
                 fetchStatus();
-            } catch(e) {
-                alert('Schedule update failed');
+            } catch (e) {
+                showToast('scheduleToast', '❌ Schedule update failed.');
             }
         }
 
@@ -280,45 +411,52 @@
             try {
                 const res = await fetch('/api/manual', { method: 'POST' });
                 const data = await res.json();
-                showMessage('manualMsg', data.message);
-            } catch(e) {
-                alert('Manual run trigger failed');
+                showToast('manualToast', '🚀 Update triggered! Watch the logs below.');
+            } catch (e) {
+                showToast('manualToast', '❌ Failed to trigger update.');
             } finally {
                 spinner.style.display = 'none';
-                setTimeout(fetchLogs, 2000);
+                setTimeout(fetchLogs, 3000);
             }
         }
 
-        function showMessage(id, text) {
+        function showToast(id, text) {
             const el = document.getElementById(id);
-            el.innerText = text;
+            el.textContent = text;
             el.style.display = 'block';
-            setTimeout(() => el.style.display = 'none', 4000);
+            setTimeout(() => el.style.display = 'none', 5000);
         }
 
+        // === SECURE Log Rendering (uses textContent, NOT innerHTML) ===
         async function fetchLogs() {
             try {
                 const res = await fetch('/api/logs');
                 const data = await res.json();
                 const logBox = document.getElementById('logContent');
+                logBox.innerHTML = ''; // Clear
+
                 if (data.logs && data.logs.length) {
-                    logBox.innerHTML = data.logs.map(l => {
-                        if (l.includes('[ERROR]')) return `<span style="color:#ff4757">${l}</span>`;
-                        if (l.includes('[WARN]')) return `<span style="color:#ffa502">${l}</span>`;
-                        return l;
-                    }).join('<br>');
+                    data.logs.forEach(line => {
+                        const div = document.createElement('div');
+                        div.className = 'log-line';
+                        div.textContent = line; // Safe: no HTML injection
+                        if (line.includes('[ERROR]')) div.classList.add('log-error');
+                        else if (line.includes('[WARN]')) div.classList.add('log-warn');
+                        else div.classList.add('log-info');
+                        logBox.appendChild(div);
+                    });
                 } else {
-                    logBox.innerHTML = "Waiting for logs...";
+                    logBox.textContent = 'Waiting for logs...';
                 }
                 logBox.scrollTop = logBox.scrollHeight;
-            } catch(e) {}
+            } catch (e) { /* silent */ }
         }
 
-        // Auto-refresh
+        // === Auto-refresh ===
         fetchStatus();
         fetchLogs();
-        setInterval(fetchStatus, 3000);
-        setInterval(fetchLogs, 5000);
+        setInterval(fetchStatus, 5000);
+        setInterval(fetchLogs, 8000);
     </script>
 </body>
 </html>
