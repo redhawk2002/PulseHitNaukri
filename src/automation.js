@@ -21,40 +21,53 @@ async function runProfileUpdate() {
     });
 
     const context = await browser.newContext({
-      viewport: null, // use window size
+      viewport: { width: 1280, height: 800 },
       userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
     });
-    
+
+    // 1. Inject saved session cookies to bypass login (avoids OTP on new IPs)
+    const rawCookies = process.env.NAUKRI_COOKIES;
+    if (!rawCookies) {
+      throw new Error('NAUKRI_COOKIES env var is not set. Please export cookies from your browser and set this variable in Render.');
+    }
+    let cookies;
+    try {
+      cookies = JSON.parse(rawCookies);
+    } catch (e) {
+      throw new Error(`Failed to parse NAUKRI_COOKIES: ${e.message}`);
+    }
+
+    // Map cookie-editor format to Playwright format
+    const playwrightCookies = cookies.map(c => ({
+      name: c.name,
+      value: c.value,
+      domain: c.domain,
+      path: c.path || '/',
+      expires: c.expirationDate ? Math.floor(c.expirationDate) : -1,
+      httpOnly: c.httpOnly || false,
+      secure: c.secure || false,
+      sameSite: (() => {
+        const s = (c.sameSite || '').toLowerCase();
+        if (s === 'strict') return 'Strict';
+        if (s === 'lax') return 'Lax';
+        return 'None';
+      })()
+    }));
+
+    await context.addCookies(playwrightCookies);
+    logger.info(`Injected ${playwrightCookies.length} session cookies. Skipping login form.`);
+
     const page = await context.newPage();
 
-    // 1. Navigate to Login Page
-    logger.info('Navigating to login page...');
-    await page.goto('https://www.naukri.com/nlogin/login', { waitUntil: 'domcontentloaded' });
-    await randomDelay(2000, 4000);
+    // 2. Verify session is valid by navigating to the user homepage
+    logger.info('Verifying session by navigating to Naukri homepage...');
+    await page.goto('https://www.naukri.com/mnjuser/homepage', { waitUntil: 'domcontentloaded', timeout: 30000 });
+    await randomDelay(2000, 3000);
 
-    // 2. Login
-    logger.info('Entering credentials...');
-    await page.fill('#usernameField', config.naukriEmail);
-    await randomDelay();
-    await page.fill('#passwordField', config.naukriPassword);
-    await randomDelay(500, 1500);
-    
-    // Check if there is a common login button selector and click it
-    // Using a more exact selector to avoid matching "Use OTP to Login" button
-    const loginButton = page.locator('button[type="submit"].blue-btn:has-text("Login")');
-    await loginButton.click();
-    
-    // Wait for navigation after login (could be a redirect to homepage or user dashboard)
-    logger.info('Waiting for login to complete...');
-    await page.waitForNavigation({ waitUntil: 'networkidle', timeout: 30000 }).catch(() => logger.warn('Network idle timeout after login, proceeding anyway...'));
-    await randomDelay(3000, 5000);
-
-    // Check if the current URL looks logged in, or if there's an error message
     if (page.url().includes('login')) {
-        // Look for error message on login page
-        const errorMsg = await page.locator('.err-msg').count() > 0 ? await page.locator('.err-msg').first().textContent() : 'Unknown login error';
-        throw new Error(`Login failed. Still on login page. Possible Error: ${errorMsg}`);
+      throw new Error('Session cookies are expired or invalid. Please re-export cookies from your browser and update NAUKRI_COOKIES in Render.');
     }
+    logger.info('Session verified. Logged in successfully via cookies.');
     
     // 3. Navigate to Profile
     logger.info('Navigating to profile page...');
