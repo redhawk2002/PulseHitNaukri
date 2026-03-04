@@ -11,7 +11,7 @@ async function runProfileUpdate() {
   let browser;
   try {
     browser = await chromium.launch({
-      headless: true,
+      headless: config.headless,
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
